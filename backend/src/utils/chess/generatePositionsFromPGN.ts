@@ -1,27 +1,60 @@
-const { Chess } = require('chess.js')
+import { Chess } from "chess.js";
 
-var chess = new Chess();
+interface PositionData {
+  fen: string;
+  moveNum: number;
+  whitePieces: string[];
+  blackPieces: string[];
+  isDoubleCheck : boolean;
+  whiteMaterialAdvantage : JSON;
+  blackMaterialAdvantage : JSON;
+  
+}
 
-const pgn = ['[Event "Casual Game"]',
-       '[Site "Berlin GER"]',
-       '[Date "1852.??.??"]',
-       '[EventDate "?"]',
-       '[Round "?"]',
-       '[Result "1-0"]',
-       '[White "Adolf Anderssen"]',
-       '[Black "Jean Dufresne"]',
-       '[ECO "C52"]',
-       '[WhiteElo "?"]',
-       '[BlackElo "?"]',
-       '[PlyCount "47"]',
-       '',
-       '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.b4 Bxb4 5.c3 Ba5 6.d4 exd4 7.O-O',
-       'd3 8.Qb3 Qf6 9.e5 Qg6 10.Re1 Nge7 11.Ba3 b5 12.Qxb5 Rb8 13.Qa4',
-       'Bb6 14.Nbd2 Bb7 15.Ne4 Qf5 16.Bxd3 Qh5 17.Nf6+ gxf6 18.exf6',
-       'Rg8 19.Rad1 Qxf3 20.Rxe7+ Nxe7 21.Qxd7+ Kxd7 22.Bf5+ Ke8',
-       '23.Bd7+ Kf8 24.Bxe7# 1-0'];
+export function generatePositionsFromPGN(pgn: string): PositionData[] {
+  const game = new Chess();
+  game.loadPgn(pgn);
+  
+  const positions: PositionData[] = [];
 
-console.log(chess.loadPgn(pgn.join('\n')));
-// -> true
+  let moveNum = 1;
+  while (!game.isGameOver()) {
+    const fen = game.fen();
 
-console.log(chess.fen())
+    // Extract piece placement and material balance
+    const board = game.board();
+    const whitePieces: string[] = [];
+    const blackPieces: string[] = [];
+    let whiteMaterial = 0;
+    let blackMaterial = 0;
+    const isDoubleCheck = false
+    board.forEach((row) => {
+      row.forEach((piece) => {
+        if (piece) {
+          const symbol = `${piece.color === "w" ? "white" : "black"}${piece.type.toUpperCase()}`;
+          piece.color === "w" ? whitePieces.push(symbol) : blackPieces.push(symbol);
+
+          // Material values (pawn = 1, knight/bishop = 3, rook = 5, queen = 9)
+          const materialValues: Record<string, number> = {
+            p: 1, n: 3, b: 3, r: 5, q: 9, k: 0,
+          };
+          piece.color === "w"
+            ? (whiteMaterial += materialValues[piece.type])
+            : (blackMaterial += materialValues[piece.type]);
+        }
+      });
+    });
+
+    positions.push({ fen, moveNum, whitePieces, blackPieces, whiteMaterial, blackMaterial , isDiscoveredCheck , isDoubleCheck});
+
+    game.move(game.turn() === "w" ? game.moves()[0] : game.moves()[1]); // Progress move
+    moveNum++;
+  }
+
+  return positions;
+}
+
+// Example usage:
+const pgn = "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6...";
+const extractedPositions = generatePositionsFromPGN(pgn);
+console.log(extractedPositions);

@@ -15,65 +15,47 @@ model Game {
   resultReason ResultReason
   pgn         String
   createdAt   DateTime  @default(now())
-
+  gameDate    DateTime
   gameSource  GameSource 
   gameVariant GameVariant @default(Standard)
   fromPosition String // FEN string or Chess960 ID.
-
+  openingName String?
+  ecoCode     String
+  variation   String
   playedOnDGT Boolean
   organization String?
   year        Int?
   city        String?
   country     String?
-
-  positions   Position[]
-  puzzles     Puzzle[] 
   timeControl String?
+
 }
 model Position {
   id              Int    @id @default(autoincrement())
-  fen             String // Board state in FEN notation
-  moveNum         Int?   // Move number (if part of a game)
-  gameId          Int?   // Game reference (if applicable)
-  game            Game?  @relation(fields: [gameId], references: [id])
-
-  // Piece Data
-  whitePieces     Json   // JSON storing all white pieces
-  blackPieces     Json   // JSON storing all black pieces
-
-  // Board Control Data
-  whiteControl    Json   // JSON storing squares controlled by white (square: count)
-  blackControl    Json   // JSON storing squares controlled by black (square: count)
-
-  // Material Equality
-  whiteAdvantage Json
-  blackAdvantage Json
-
-  // Position Features
-  turn           String // "white" or "black" (whose move it is)
+  fen             String
+  fromGame        Boolean
+  gameReferences  Json @default("[]") // Stores multiple game IDs as JSON array
+  whitePieces     Json
+  blackPieces     Json
+  
+  whiteMaterialAdvantage Json
+  blackMaterialAdvantage Json
+  moveTurn       String 
   isCheck        Boolean @default(false)
   isDoubleCheck  Boolean @default(false)
   isDiscoveredCheck Boolean @default(false)
   isMate         Boolean @default(false)
-
+  isStaleMate    Boolean @default(false) 
   createdAt      DateTime @default(now())
-
-  // Accuracy Stats
   whiteAccuracy  Float?
   blackAccuracy  Float?
   whiteAverageCentipawnLoss Float?
   blackAverageCentipawnLoss Float?
-  whiteBlunderMove Int?
-  whiteInAccuracyMove Int?
-  blackBlunderMove Int?
-  blackInAccuracyMove Int?
-
-  // Identification of position
-  fromEcoCode    String?
-  fromOpening    String?
-  fromVariation  String?
+  fromEcoCode    Json
+  fromOpening    Json
+  fromVariation  Json
   positionPhase  PositionPhase
-  positionEvaluation PositionEvaluation 
+  positionEvaluation PositionEvaluation
 }
 
 model Puzzle {
@@ -87,8 +69,7 @@ model Puzzle {
   fromOpening   String?
   fromVariation String?
   goal          String // attack, defense, mate
-  gameId        Int?   
-  game          Game? @relation(fields: [gameId], references: [id])
+  gameId        Json  
   createdAt     DateTime @default(now())
 }
 
