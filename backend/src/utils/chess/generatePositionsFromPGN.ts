@@ -3,58 +3,108 @@ import { Chess } from "chess.js";
 interface PositionData {
   fen: string;
   moveNum: number;
-  whitePieces: string[];
-  blackPieces: string[];
-  isDoubleCheck : boolean;
-  whiteMaterialAdvantage : JSON;
-  blackMaterialAdvantage : JSON;
-  
+  whitePieceCoordinates: Record<string, string[]>; // e.g., { "bishop": ["f4"], "knight": ["g5", "h6"] }
+  blackPieceCoordinates: Record<string, string[]>;
+  isDoubleCheck: boolean;
+  isMate: boolean;
+  isStalemate: boolean;
+  // isDiscoveredCheck: boolean;
+  isCheck: boolean;
+  whiteMaterial: Record<string, number>;
+  blackMaterial: Record<string, number>;
+  materialAdvantage: {
+    white: Record<string, number>;
+    black: Record<string, number>;
+  };
 }
 
-export function generatePositionsFromPGN(pgn: string): PositionData[] {
+// Step 1: Extracting the sequence of FEN positions from PGN
+export function extractFENsFromPGN(pgn: string): string[] {
   const game = new Chess();
   game.loadPgn(pgn);
-  
-  const positions: PositionData[] = [];
 
-  let moveNum = 1;
+  const fenPositions: string[] = [];
+
   while (!game.isGameOver()) {
-    const fen = game.fen();
-
-    // Extract piece placement and material balance
-    const board = game.board();
-    const whitePieces: string[] = [];
-    const blackPieces: string[] = [];
-    let whiteMaterial = 0;
-    let blackMaterial = 0;
-    const isDoubleCheck = false
-    board.forEach((row) => {
-      row.forEach((piece) => {
-        if (piece) {
-          const symbol = `${piece.color === "w" ? "white" : "black"}${piece.type.toUpperCase()}`;
-          piece.color === "w" ? whitePieces.push(symbol) : blackPieces.push(symbol);
-
-          // Material values (pawn = 1, knight/bishop = 3, rook = 5, queen = 9)
-          const materialValues: Record<string, number> = {
-            p: 1, n: 3, b: 3, r: 5, q: 9, k: 0,
-          };
-          piece.color === "w"
-            ? (whiteMaterial += materialValues[piece.type])
-            : (blackMaterial += materialValues[piece.type]);
-        }
-      });
-    });
-
-    positions.push({ fen, moveNum, whitePieces, blackPieces, whiteMaterial, blackMaterial , isDiscoveredCheck , isDoubleCheck});
-
-    game.move(game.turn() === "w" ? game.moves()[0] : game.moves()[1]); // Progress move
-    moveNum++;
+    fenPositions.push(game.fen());
+    game.move(game.moves()[0]); // move progress
   }
 
-  return positions;
+  return fenPositions;
 }
 
-// Example usage:
-const pgn = "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6...";
-const extractedPositions = generatePositionsFromPGN(pgn);
-console.log(extractedPositions);
+// Step 2: Process individual FEN positions
+export function generatePositionFromFEN(fen: string, moveNum: number): PositionData {
+  const game = new Chess(fen);
+  const board = game.board();
+
+  let whitePieceCoordinates: Record<string, string[]> = {};
+  let blackPieceCoordinates: Record<string, string[]> = {};
+
+  let whiteMaterial: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
+  let blackMaterial: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
+
+  board.forEach((row, rowIdx) => {
+    row.forEach((piece, colIdx) => {
+      if (piece) {
+        const coord = `${String.fromCharCode(97 + colIdx)}${8 - rowIdx}`;
+        const pieceNameMap: Record<string, string> = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+        const pieceType = pieceNameMap[piece.type];
+
+        if (piece.color === "w") {
+          if (!whitePieceCoordinates[pieceType]) whitePieceCoordinates[pieceType] = [];
+          whitePieceCoordinates[pieceType].push(coord);
+          whiteMaterial[pieceType]++;
+        } else {
+          if (!blackPieceCoordinates[pieceType]) blackPieceCoordinates[pieceType] = [];
+          blackPieceCoordinates[pieceType].push(coord);
+          blackMaterial[pieceType]++;
+        }
+      }
+    });
+  });
+
+  // **Calculate Material Advantage** by comparing piece counts directly
+  let materialAdvantageWhite: Record<string, number> = {};
+  let materialAdvantageBlack: Record<string, number> = {};
+
+  Object.keys(whiteMaterial).forEach((pieceType) => {
+    const difference = whiteMaterial[pieceType] - blackMaterial[pieceType];
+    if (difference > 0) materialAdvantageWhite[pieceType] = difference;
+    else if (difference < 0) materialAdvantageBlack[pieceType] = -difference;
+  });
+
+  return {
+    fen,
+    moveNum,
+    whitePieceCoordinates,
+    blackPieceCoordinates,
+    isDoubleCheck: game.inCheck() && game.moves().filter(m => m.includes("+")).length > 1,
+    isMate: game.isCheckmate(),
+    isStalemate: game.isStalemate(),
+    // isDiscoveredCheck: (game.inCheck() && game.moves().filter(m => m.includes("+")).length > 1), // Rough estimation
+    isCheck: game.inCheck(),
+    whiteMaterial,
+    blackMaterial,
+    materialAdvantage: {
+      white: materialAdvantageWhite,
+      black: materialAdvantageBlack,
+    },
+  };
+}
+
+// Step 3: Convert PGN → Position Data
+export function generatePositionsFromPGN(pgn: string): PositionData[] {
+  const fens = extractFENsFromPGN(pgn);
+  return fens.map((fen, index) => generatePositionFromFEN(fen, index + 1));
+}
+
+// **Example FEN Input**
+// exchange example
+// const fenExample = "rnbqkb1r/ppp1pp1p/5p2/3p4/3P4/8/PPP1PPPP/RN1QKBNR w KQkq - 0 4";
+
+//legal mate fen 
+const fenExample = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4"
+
+const positionData = generatePositionFromFEN(fenExample, 1);
+console.log(JSON.stringify(positionData, null, 2));
