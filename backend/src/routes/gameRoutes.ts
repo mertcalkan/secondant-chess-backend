@@ -8,4 +8,9 @@ router.get('/games', async (req, res) => {
   res.json(games);
 });
 
+router.get('/positions', async (req, res) => {
+ const positions = await prisma.position.findMany();
+  res.json(positions);
+});
+
 export default router;
