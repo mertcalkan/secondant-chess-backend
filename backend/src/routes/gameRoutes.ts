@@ -4,11 +4,7 @@ import prisma from '../prisma/client';
 const router = express.Router();
 
 router.get('/games', async (req, res) => {
-  const games = await prisma.game.findMany({
-    include: {
-      positions: true
-    }
-  });
+ const games = await prisma.game.findMany();
   res.json(games);
 });
 

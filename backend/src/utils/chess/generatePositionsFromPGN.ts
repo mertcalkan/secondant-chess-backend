@@ -2,7 +2,6 @@ import { Chess } from "chess.js";
 import { generatePositionFromFEN } from "./generatePositionFromFEN";
 interface PositionData {
   fen: string;
-  moveNum: number;
   whitePieceCoordinates: Record<string, string[]>; // e.g., { "bishop": ["f4"], "knight": ["g5", "h6"] }
   blackPieceCoordinates: Record<string, string[]>;
   isDoubleCheck: boolean;
@@ -10,8 +9,8 @@ interface PositionData {
   isStalemate: boolean;
   // isDiscoveredCheck: boolean;
   isCheck: boolean;
-  whiteMaterial: Record<string, number>;
-  blackMaterial: Record<string, number>;
+  whitePieces: Record<string, number>;
+  blackPieces: Record<string, number>;
   materialAdvantage: {
     white: Record<string, number>;
     black: Record<string, number>;
@@ -39,7 +38,7 @@ export function extractFENsFromPGN(pgn: string): string[] {
 // Step 3: Convert PGN → Position Data
 export function generatePositionsFromPGN(pgn: string): PositionData[] {
   const fens = extractFENsFromPGN(pgn);
-  return fens.map((fen, index) => generatePositionFromFEN(fen, index + 1));
+  return fens.map((fen) => generatePositionFromFEN(fen));
 }
 
 // **Example FEN Input**
@@ -49,5 +48,5 @@ export function generatePositionsFromPGN(pgn: string): PositionData[] {
 //legal mate fen 
 const fenExample = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4"
 
-const positionData = generatePositionFromFEN(fenExample, 1);
+const positionData = generatePositionFromFEN(fenExample);
 console.log(JSON.stringify(positionData, null, 2));

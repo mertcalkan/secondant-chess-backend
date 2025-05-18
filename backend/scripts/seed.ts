@@ -1,103 +1,30 @@
-import { Chess } from "chess.js";
-import { PrismaClient, GameVariant, ResultReason, GameSource, PositionPhase, PositionEvaluation, PuzzleType } from '@prisma/client';
-import { generatePositionsFromPGN } from "../src/utils/chess/generatePositionsFromPGN";
-// import { importGamesFromExcel } from "../src/utils/chess/importGamesFromExcel"
+
+import { PrismaClient } from '@prisma/client';
+import { addGame } from "../src/utils/addGame";
+import { addPosition } from "../src/utils/addPosition";
+import { addPuzzle } from "../src/utils/addPuzzle";
+// import { addTheoryTable } from "../src/utils/addTheoryTable";
 const prisma = new PrismaClient();
-
 async function main() {
+  const pgnTest = "1. c4 e6 2. g3 d5 3. Bg2 Nf6 4. Nf3 Be7 5. d4 O-O 6. O-O dxc4 7. Qc2 b5 8. a4 b4 9. Nfd2 Nd5 10. Nxc4 c5 11. dxc5 Bxc5 12. e4 Nb6 13. Ncd2 N8d7 14. a5 Ba6 15. axb6 Rc8 16. Rxa6 Bxf2+ 17. Kxf2 Rxc2 18. bxa7 Nb6 19. Kg1 Qc8 20. Rxb6 Qc5+ 21.Kh1 Qxb6 22. Nf3 Qxa7 23. Bf4 Rxb2 24. Nbd2 Qa2 25. Rc1 Rd8 0-1" // Özetlenmiş PGN
+  const fenTest = "r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4";
+  try {
+    const game = await addGame(pgnTest, true, 1);
+    console.log("Game inserted:", game);
 
-    const pgn = "1. Nf3 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. g3 Bg7 6. Nxd5 Qxd5 7. Bg2 O-O 8. O-O Nc6 9. d3 Qd8 10. a3 e5 11. Bg5 Qd6 12. Qc2 Bg4 13. Be3 Rfe8 14. Rac1 Rac8 15. Rfe1 Ne7 16. Ng5 Nd5 17. Qb3 c6 18. Bxa7 Qe7 19. h4 h6 20. Bc5 Qd7 21. Ne4 b6 22. Bb4 Be6 23. Qa4 Red8 24. Bd2 f5 25. Nc3 Ne7 26. Red1 Kh7 27. Be3 Rb8 28. b4 Ra8 29. Qc2 Rxa3 30. Bxb6 Rb8 31. Bc5 Nd5 32. Nxd5 cxd5 33. Ra1 Raa8 34. Rxa8 Rxa8 35. d4 f4 36. dxe5 fxg3 37. fxg3 Bxe5 38. h5 Qf7 39. hxg6+ Qxg6 40. Qxg6+ Kxg6 41. Bxd5 Bxd5 42. Rxd5 Bxg3 43. Kg2 Bf4 44. b5 Ra2 45. Kf3 Bh2 46. b6 Rb2 47. Be3 Rb4 48. Rd8 Rb5 49. Rh8 h5 50. Kg2 Be5 51. Rh6+ Kf5 52. Rxh5+ Ke4 53. Bf2 Rb2 54. Rh4+ Kd5 55. e4+ Kc4 56. Kf3 Rb3+ 57. Kg4 Rb5 58. Rh6 Bc3 59. Rc6+ Kd3 60. Kf3 Rb1 61. Rd6+ Kc4 62. Rd7 Kb5 63. Rc7 Ba5 64. Kg4 Rb2 65. Bd4 Rb4 66. Rd7 Kc6 67. Rd8 Bxb6 68. Bxb6 Rxe4+ 69. Kf3 Re7 70. Be3 Kc7 71. Ra8 Re6 72. Ke2 Kc6 73. Kd3 Rd6+ 74. Kc4 Rd1 75. Ra6+ Kb7 76. Rf6 Re1 77. Bc5 Rc1+ 78. Kb5 Rb1+ 79. Bb4 Rc1 80. Bc5 Rb1+ 81. Kc4 Rh1 82. Rb6+ Kc7 83. Ra6 Kb7 84. Re6 Rd1 85. Kb5 Rb1+ 86. Bb4 Rc1 87. Ra6 Rc2 88. Ra1 Rh2 89. Bc5 Rb2+ 90. Kc4 Rh2 91. Ra7+ Kc6 92. Ra6+ Kb7 93. Rb6+ Kc7 94. Rg6 Rd2 95. Bd4 Kb7 96. Kd5 Rc2 97. Rb6+ Kc7 98. Ra6 Kd7 99. Rg6 Re2 100. Rd6+ Ke7 101. Rg6 Kd7 102. Rh6 Rc2 103. Rd6+ Kc7 104. Rg6 Kb7 105. Bc5 Rd2+ 106. Ke5 Rd1 107. Rg7+ Ka6 108. Bd4 Rc1 109. Kd5 Rc8 110. Ra7+ Kb5 111. Rb7+ Ka6 112. Rb6+ Ka5 113. Bc5 Rd8+ 114. Kc4 Rd1 115. Rb2 Rc1+ 116. Kd5 Ka4 117. Rb4+ Ka5 118. Kc6 Rc3 119. Rb8 Ka4 120. Rb7 Rc2 121. Kd5 Rd2+ 122. Bd4 Rc2 123. Ke4 Ka5 124. Rb6 Rc4 125. Rb2 Rc1 126. Kd5 Ka4 127. Bc5 Ka5 128. Kc6 Rc4 129. Rb3 Rg4 130. Ra3+ Ra4 131. Rd3 Rg4 132. Kd5 Kb5 133. Rb3+ Ka4 134. Rb2 Rh4 135. Bd4 Ka3 136. Rb7 Ka2 137. Kc4 Rg4 138. Rb2+ Ka3 139. Rb1 Rg2 140. Rb7 1-0.";
-    const positions = generatePositionsFromPGN(pgn); // Function extracts positions
+    await addPosition(fenTest, false);
+    console.log("Positions inserted");
 
-    // Insert game into `games` table
-    const game = await prisma.game.create({
-      data: {
-        id: 1,
-        white: "Magnus Carlsen",
-        black: "Hikaru Nakamura",
-        result: "1-0",
-        resultReason: ResultReason.Checkmate,
-        pgn,
-        gameSource: GameSource.Lichess,
-        gameVariant: GameVariant.Standard,
-        fromPosition: "startpos",
-        openingName : "Ruy Lopez",
-        gameDate : "2023-01-01",
-        variation : "Ruy Lopez: Classical",
-        playedOnDGT: false,
-        organization: "Lichess Masters",
-        year: 2024,
-        city: "Oslo",
-        country: null,
-        timeControl: "3+2",
-      },
-    });
-
-    console.log("✅ Game inserted:", game);
-
-    // Insert positions separately into `positions` table
-    for (const position of positions) {
-      // Check if the FEN already exists in the database
-      const existingPosition = await prisma.position.findFirst({
-        where: { fen: position.fen },
-      });
-    
-      if (existingPosition) {
-        // If the position already exists, update `gameReference`
-        await prisma.position.update({
-          where: { id: existingPosition.id },
-          data: {
-            gameReferences: [
-              ...existingPosition.gameReferences, // Keep existing references
-              { gameId: game.id}
-            ],
-          },
-        });
-    
-        console.log(`🔄 Updated game reference for FEN: ${position.fen}`);
-      } else {
-        // If it's a new position, insert it into the database
-        await prisma.position.create({
-          data: {
-            
-            fen: position.fen,
-            fromGame: true,
-            gameReference: [{ gameId: game.id }],
-            whitePieces: position.whitePieceCoordinates,
-            blackPieces: position.blackPieceCoordinates,
-            whiteMaterialAdvantage: position.whiteMaterialAdvantage,
-            blackMaterialAdvantage: position.blackMaterialAdvantage,
-            positionPhase: PositionPhase.Opening,
-            positionEvaluation: PositionEvaluation.WhiteSlightlyBetter,
-            isCheck: position.isCheck,
-            isMate: position.isMate,
-            isStalemate: position.isStalemate,
-            isDoubleCheck: position.isDoubleCheck,
-            isDiscoveredCheck: position.isDiscoveredCheck,
-          },
-        });
-    
-        console.log(`✅ Inserted new position for FEN: ${position.fen}`);
-      }
-    }
-
-    console.log("✅ Positions inserted separately.");
-
+    // await addPuzzle(pgn, "Qxf7#");
+    // console.log("✅ Puzzle inserted");
+    // await addTheoryTable("Ruy Lopez", ["e4 e5", "Nf3 Nc6", "Bb5"]);
+    // console.log("✅ Theory Table inserted");
+  } catch (error) {
+    console.error("❌ Error:", error);
+  } finally {
+    await prisma.$disconnect();
   }
-
-
-
-
-
+}
 
 main()
-  .then(() => prisma.$disconnect())
-  .catch((e) => {
-    console.error(e);
-    prisma.$disconnect();
-  });
-
-
-
-
 

@@ -35,11 +35,11 @@ model Position {
   fen             String
   fromGame        Boolean
   gameReferences  Json @default("[]") // Stores multiple game IDs as JSON array
-  whitePieces     Json
-  blackPieces     Json
-  
-  whiteMaterialAdvantage Json
-  blackMaterialAdvantage Json
+  whitePieceCoordinates     Json
+  blackPieceCoordinates     Json
+  whitePieces Json
+  blackPieces Json
+  materialAdvantage Json
   moveTurn       String 
   isCheck        Boolean @default(false)
   isDoubleCheck  Boolean @default(false)

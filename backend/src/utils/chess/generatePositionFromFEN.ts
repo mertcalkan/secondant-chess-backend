@@ -8,8 +8,8 @@ interface PositionData {
   isStalemate: boolean;
   // isDiscoveredCheck: boolean;
   isCheck: boolean;
-  whiteMaterial: Record<string, number>;
-  blackMaterial: Record<string, number>;
+  whitePieces: Record<string, number>;
+  blackPieces: Record<string, number>;
   materialAdvantage: {
     white: Record<string, number>;
     black: Record<string, number>;
@@ -22,8 +22,8 @@ export function generatePositionFromFEN(fen: string): PositionData {
   let whitePieceCoordinates: Record<string, string[]> = {};
   let blackPieceCoordinates: Record<string, string[]> = {};
 
-  let whiteMaterial: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
-  let blackMaterial: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
+  let whitePieces: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
+  let blackPieces: Record<string, number> = { pawn: 0, knight: 0, bishop: 0, rook: 0, queen: 0, king: 0 };
 
   board.forEach((row, rowIdx) => {
     row.forEach((piece, colIdx) => {
@@ -35,11 +35,11 @@ export function generatePositionFromFEN(fen: string): PositionData {
         if (piece.color === "w") {
           if (!whitePieceCoordinates[pieceType]) whitePieceCoordinates[pieceType] = [];
           whitePieceCoordinates[pieceType].push(coord);
-          whiteMaterial[pieceType]++;
+          whitePieces[pieceType]++;
         } else {
           if (!blackPieceCoordinates[pieceType]) blackPieceCoordinates[pieceType] = [];
           blackPieceCoordinates[pieceType].push(coord);
-          blackMaterial[pieceType]++;
+          blackPieces[pieceType]++;
         }
       }
     });
@@ -49,8 +49,8 @@ export function generatePositionFromFEN(fen: string): PositionData {
   let materialAdvantageWhite: Record<string, number> = {};
   let materialAdvantageBlack: Record<string, number> = {};
 
-  Object.keys(whiteMaterial).forEach((pieceType) => {
-    const difference = whiteMaterial[pieceType] - blackMaterial[pieceType];
+  Object.keys(whitePieces).forEach((pieceType) => {
+    const difference = whitePieces[pieceType] - blackPieces[pieceType];
     if (difference > 0) materialAdvantageWhite[pieceType] = difference;
     else if (difference < 0) materialAdvantageBlack[pieceType] = -difference;
   });
@@ -64,8 +64,8 @@ export function generatePositionFromFEN(fen: string): PositionData {
     isStalemate: game.isStalemate(),
     // isDiscoveredCheck: (game.inCheck() && game.moves().filter(m => m.includes("+")).length > 1), // Rough estimation
     isCheck: game.inCheck(),
-    whiteMaterial,
-    blackMaterial,
+    whitePieces,
+    blackPieces,
     materialAdvantage: {
       white: materialAdvantageWhite,
       black: materialAdvantageBlack,
