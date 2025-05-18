@@ -13,4 +13,11 @@ router.get('/positions', async (req, res) => {
   res.json(positions);
 });
 
+// router.get('/puzzles', async (req, res) => {
+//  const puzzles = await prisma.puzzle.findMany();
+//   res.json(puzzles);
+// });
+
+
+
 export default router;
