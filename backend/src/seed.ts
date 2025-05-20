@@ -1,8 +1,8 @@
 
 import { PrismaClient } from '@prisma/client';
-import { addGame } from "../src/utils/addGame";
-import { addPosition } from "../src/utils/addPosition";
-import { addPuzzle } from "../src/utils/addPuzzle";
+import { addGame } from "./utils/addGame";
+import { addPosition } from "./utils/addPosition";
+// import { addPuzzle } from "./utils/addPuzzle";
 // import { addTheoryTable } from "../src/utils/addTheoryTable";
 const prisma = new PrismaClient();
 async function main() {
