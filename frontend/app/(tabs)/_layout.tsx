@@ -53,13 +53,13 @@ const _layout = () => {
         }}
       />
       <Tabs.Screen
-        name="puzzles"
+        name="positions"
         options={{ title: "Positions", headerShown: false ,
           tabBarIcon: ({ focused }) => <TabIcon focused = {focused} icon = {icons.chessboard} title = "Positions"/>
         }}
       />
       <Tabs.Screen
-        name="positions"
+        name="puzzles"
         options={{ title: "Puzzles", headerShown: false ,
            tabBarIcon: ({ focused }) => <TabIcon focused = {focused} icon = {icons.puzzle} title = "Puzzles"/>
          }}
