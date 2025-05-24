@@ -58,7 +58,7 @@ export function parsePostPositionFilters(body: PositionFilterPayload) {
   if (typeof body.isCheck === 'boolean') where.isCheck = body.isCheck;
   if (typeof body.isDoubleCheck === 'boolean') where.isDoubleCheck = body.isDoubleCheck;
   if (typeof body.isDiscoveredCheck === 'boolean') where.isDiscoveredCheck = body.isDiscoveredCheck;
-  if (typeof body.isStalemate === 'boolean') where.isStaleMate = body.isStalemate;
+  if (typeof body.isStalemate === 'boolean') where.isStalemate = body.isStalemate;
 
   if (body.positionEvaluation) {
     where.positionEvaluation = body.positionEvaluation;
