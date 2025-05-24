@@ -4,7 +4,7 @@ import { Text, View } from 'react-native'
 const gameDetails = () => {
   return (
     <View>
-      <Text> gameDetails</Text>
+      <Text>gameDetails</Text>
     </View>
   )
 }

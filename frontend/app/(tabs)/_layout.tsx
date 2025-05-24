@@ -23,6 +23,7 @@ const TabIcon = ({focused , icon , title} : any) => {
   );
 
 };
+
 const _layout = () => {
   return (
     <Tabs screenOptions={{
