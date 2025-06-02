@@ -10,8 +10,8 @@ type PositionFilterPayload = {
   isCheck?: boolean;
   isDoubleCheck?: boolean;
   isDiscoveredCheck?: boolean;
-  positionEvaluation?: Prisma.PositionEvaluation;
-  positionPhase?: Prisma.PositionPhase;
+  positionEvaluation?: Prisma.positionEvaluation;
+  positionPhase?: Prisma.positionPhase;
   isStalemate?: boolean;
   createdAt?: { gte?: string; lte?: string };
   limit?: number;
@@ -21,15 +21,37 @@ type PositionFilterPayload = {
 };
 
 export function parsePostPositionFilters(body: PositionFilterPayload) {
+  console.log('whitePieceCoordinates (filtered):', normalizeFilterCoordinates(body.whitePieceCoordinates));
+
   const where: Prisma.PositionWhereInput = {};
   const orderBy: Prisma.PositionOrderByWithRelationInput = {};
+//   if (body.whitePieceCoordinates) {
+//    where.whitePieceCoordinates = {
+//   path: ['king'],
+//   array_contains: ["e1"],
+// };
+//   }
+  //  if (body.whitePieceCoordinates) {
+  //   where.whitePieceCoordinates = {
+  //     equals: body.whitePieceCoordinates as any,
+  //   } 
+  // }
+if (body.whitePieceCoordinates) {
+  const pieceTypes = Object.keys(body.whitePieceCoordinates);
 
-  if (body.whitePieceCoordinates) {
-    where.whitePieceCoordinates = {
-      equals: body.whitePieceCoordinates as any,
-    };
+  for (const pieceType of pieceTypes) {
+    const squares = body.whitePieceCoordinates[pieceType];
+
+    
+    if (squares.length > 0) {
+      where.whitePieceCoordinates = {
+        path: [pieceType],
+        array_contains: squares,
+      };
+      break; // sadece bir filtre uygula, istersen birden fazlasını da işleyebilirsin
+    }
   }
-
+}
   if (body.blackPieceCoordinates) {
     where.blackPieceCoordinates = {
       equals: body.blackPieceCoordinates as any,
@@ -58,7 +80,7 @@ export function parsePostPositionFilters(body: PositionFilterPayload) {
   if (typeof body.isCheck === 'boolean') where.isCheck = body.isCheck;
   if (typeof body.isDoubleCheck === 'boolean') where.isDoubleCheck = body.isDoubleCheck;
   if (typeof body.isDiscoveredCheck === 'boolean') where.isDiscoveredCheck = body.isDiscoveredCheck;
-  if (typeof body.isStalemate === 'boolean') where.isStalemate = body.isStalemate;
+  if (typeof body.isStalemate === 'boolean') where.isStaleMate = body.isStalemate;
 
   if (body.positionEvaluation) {
     where.positionEvaluation = body.positionEvaluation;
@@ -67,7 +89,7 @@ export function parsePostPositionFilters(body: PositionFilterPayload) {
   if (body.positionPhase) {
     where.positionPhase = body.positionPhase;
   }
-
+  console.log('whitePieceCoordinates:', body.whitePieceCoordinates);
   if (body.createdAt) {
     const range: any = {};
     if (body.createdAt.gte) range.gte = new Date(body.createdAt.gte);
@@ -82,4 +104,13 @@ export function parsePostPositionFilters(body: PositionFilterPayload) {
   orderBy[sortField] = body.sort === 'desc' ? 'desc' : 'asc';
 
   return { where, orderBy, take, skip };
+}
+
+function normalizeFilterCoordinates(input?: Record<string, string[]>): Record<string, string[]> | undefined {
+  if (!input) return undefined;
+  const result: Record<string, string[]> = {};
+  for (const key in input) {
+    result[key] = [...input[key]].sort();
+  }
+  return result;
 }

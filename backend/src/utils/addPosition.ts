@@ -40,11 +40,11 @@ export async function addPosition(fen: string, isFromGame: boolean, gameId?: num
                     ? JSON.stringify([gameId]) 
                     : JSON.stringify([]),
 
-                whitePieceCoordinates: JSON.stringify(position.whitePieceCoordinates),
-                blackPieceCoordinates: JSON.stringify(position.blackPieceCoordinates),
+                whitePieceCoordinates: position.whitePieceCoordinates,
+                blackPieceCoordinates: position.blackPieceCoordinates,
 
-                whitePieces: JSON.stringify(position.whitePieces),
-                blackPieces: JSON.stringify(position.blackPieces),
+                whitePieces: position.whitePieces,
+                blackPieces: position.blackPieces,
 
                 positionPhase: PositionPhase.Opening,
                 positionEvaluation: PositionEvaluation.WhiteSlightlyBetter,
@@ -53,7 +53,7 @@ export async function addPosition(fen: string, isFromGame: boolean, gameId?: num
                 isStaleMate: position.isStalemate,
                 isDoubleCheck: position.isDoubleCheck,
 
-                materialAdvantage: JSON.stringify(position.materialAdvantage),
+                materialAdvantage: position.materialAdvantage,
 
                 // ✅ Missing required fields now included
                 moveTurn: "w", // Default moveTurn, adjust as necessary
